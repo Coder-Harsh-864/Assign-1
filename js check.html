@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Manager App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            padding: 20px;
+            text-align: center;
+        }
+        .task-manager {
+            max-width: 600px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            margin-bottom: 20px;
+        }
+        input[type="text"] {
+            width: 75%;
+            padding: 10px;
+            margin-right: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            padding: 10px 15px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            background: #f9f9f9;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .completed span {
+            text-decoration: line-through;
+            color: gray;
+        }
+    </style>
+</head>
+<body>
+    <div class="task-manager">
+        <h1>Task Manager App</h1>
+        <input type="text" id="task-input" placeholder="Enter a task...">
+        <button id="add-task-btn">Add Task</button>
+        <ul id="task-list"></ul>
+    </div>
+
+    <script>
+        const taskInput = document.getElementById('task-input');
+        const addTaskBtn = document.getElementById('add-task-btn');
+        const taskList = document.getElementById('task-list');
+
+        window.onload = loadTasks;
+        addTaskBtn.addEventListener('click', addTask);
+        taskList.addEventListener('click', (e) => {
+            if (e.target.classList.contains('delete-btn')) {
+                deleteTask(e);
+            } else if (e.target.classList.contains('complete-btn')) {
+                toggleComplete(e);
+            }
+        });
+
+        function addTask() {
+            const taskText = taskInput.value.trim();
+            if (taskText === '') {
+                alert('Please enter a task!');
+                return;
+            }
+
+            const task = {
+                id: Date.now(),
+                text: taskText,
+                completed: false
+            };
+
+            saveTask(task);
+            renderTask(task);
+            taskInput.value = '';
+        }
+
+        function renderTask(task) {
+            const taskItem = document.createElement('li');
+            taskItem.className = `task-item ${task.completed ? 'completed' : ''}`;
+            taskItem.dataset.id = task.id;
+            taskItem.innerHTML = `
+                <span>${task.text}</span>
+                <button class="complete-btn">✔</button>
+                <button class="delete-btn">✖</button>
+            `;
+            taskList.appendChild(taskItem);
+        }
+
+        function saveTask(task) {
+            let tasks = getTasksFromStorage();
+            tasks.push(task);
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+        }
+
+        function deleteTask(e) {
+            const taskItem = e.target.parentElement;
+            const taskId = taskItem.dataset.id;
+            taskItem.remove();
+            removeTaskFromStorage(taskId);
+        }
+
+        function toggleComplete(e) {
+            const taskItem = e.target.parentElement;
+            const taskId = taskItem.dataset.id;
+            taskItem.classList.toggle('completed');
+            toggleTaskStatusInStorage(taskId);
+        }
+
+        function getTasksFromStorage() {
+            return JSON.parse(localStorage.getItem('tasks')) || [];
+        }
+
+        function loadTasks() {
+            const tasks = getTasksFromStorage();
+            tasks.forEach(renderTask);
+        }
+
+        function removeTaskFromStorage(taskId) {
+            let tasks = getTasksFromStorage();
+            tasks = tasks.filter(task => task.id != taskId);
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+        }
+
+        function toggleTaskStatusInStorage(taskId) {
+            let tasks = getTasksFromStorage();
+            tasks = tasks.map(task => {
+                if (task.id == taskId) {
+                    task.completed = !task.completed;
+                }
+                return task;
+            });
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+        }
+    </script>
+</body>
+</html>
